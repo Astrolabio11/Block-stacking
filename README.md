@@ -1,2 +1,2 @@
 # Block-stacking
-Block-stacking words with genetic algorithm
+Block-stacking words using a genetic algorithm.
