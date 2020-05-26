@@ -78,26 +78,27 @@ fitness[prog_] := Module[{evaluate=prog},
 	evaluate
 	]
 
-crossover[parents_] := Module[
-	{pos1=Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ],
-	pos2=Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ],
-	seg1=parents[[1]],seg2=parents[[2]]},
+crossover[parents_] := Module[{temp},
+	pos1=Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ];
+	pos2=Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ];
+	seg1=parents[[1]];
+	seg2=parents[[2]];
 
 	While[pos1 == {},
-		pos1 = Position[prog1,commands[[Random[Integer,{4,8}]]][[0]] ]
+		pos1 = Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ]
 		];
 	pos1 = Drop[pos1[[Random[Integer,{1,Length[pos1]}] ]],-1];
 
 	While[pos2 == {},
-		pos2 = Position[prog2,commands[[Random[Integer,{4,8}]]][[0]] ]
+		pos2 = Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ]
 		];
 	pos2 = Drop[pos2[[Random[Integer,{1,Length[pos2]}] ]],-1];
 
 	For[i=1,i<=Length[pos1],i++,seg1 = seg1[[pos1[[i]] ]] ];
 	For[i=1,i<=Length[pos2],i++,seg2 = seg2[[pos2[[i]] ]] ];
 
-	prog1 = ReplacePart[prog1,seg2,pos1];
-	prog2 = ReplacePart[prog2,seg1,pos2];
+	prog1 = ReplacePart[parents[[1]],seg2,pos1];
+	prog2 = ReplacePart[parents[[2]],seg1,pos2];
 	newprogs = {prog1, prog2};
 	newprogs
 	]
