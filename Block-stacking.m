@@ -70,19 +70,14 @@ randomprograms := Module[{counter=1,prog=commands[[8]]},
 population := Table[randomprograms,{10}];
 
 fitness[prog_] := Module[{evaluate=prog},
-	For[i=Depth[evaluate]-1,i>0,i--,
-		evaluate = Replace[evaluate,{xcs :> cs,xtb :> tb,xnn :> nn,xms[x_] :> ms[x],
-		xmt[x_] :> mt[x],xdu[x_,y_] :> du[x,y],xnot[x_] :> not[x],xeq[x_,y_] :> eq[x,y]},i]
-		];
-	evaluate = ReplacePart[evaluate,eq,{{0}}];
+	evaluate = evaluate /. {xcs :> cs, xtb :> tb, xnn :> nn, xms :> ms, xmt :> mt, xdu :> du,
+	xnot :> not, xeq :> eq};
 	evaluate
 	]
 
 crossover[parents_] := Module[{temp},
 	pos1=Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ];
 	pos2=Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ];
-	seg1=parents[[1]];
-	seg2=parents[[2]];
 
 	While[pos1 == {},
 		pos1 = Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ]
@@ -94,11 +89,8 @@ crossover[parents_] := Module[{temp},
 		];
 	pos2 = Drop[pos2[[Random[Integer,{1,Length[pos2]}] ]],-1];
 
-	For[i=1,i<=Length[pos1],i++,seg1 = seg1[[pos1[[i]] ]] ];
-	For[i=1,i<=Length[pos2],i++,seg2 = seg2[[pos2[[i]] ]] ];
-
-	prog1 = ReplacePart[parents[[1]],seg2,pos1];
-	prog2 = ReplacePart[parents[[2]],seg1,pos2];
+	prog1 = ReplacePart[parents[[1]],parents[[2]][[Sequence @@ pos2]],pos1];
+	prog2 = ReplacePart[parents[[2]],parents[[1]][[Sequence @@ pos1]],pos2];
 	newprogs = {prog1, prog2};
 	newprogs
 	]
@@ -109,5 +101,5 @@ evolution[selectedparents_] := Module[{pairs=Partition[selectedparents,2]},
 	offspring
 	]
 
-sol = xeq[ xdu[xmt[xcs], xnot[xcs]], xdu[xms[xnn], xnot[xnn]] ];
+sol := xeq[ xdu[xmt[xcs], xnot[xcs]], xdu[xms[xnn], xnot[xnn]] ];
 Print[stack]
