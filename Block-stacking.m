@@ -2,6 +2,7 @@ stack := {N,U,A,L}
 table := {S,I,R,V,E}
 correctword := {U,N,I,V,E,R,S,A,L}
 
+(* SENSORS *)
 cs := If[MatchQ[stack,{}],
 	False,
 	stack[[-1]]
@@ -26,6 +27,7 @@ nn := Which[tb===correctword[[-1]],
 	correctword[[pos[[1,1]]+1]]
 	]
 
+(* FUNCTIONS *)
 ms[x_] := If[MemberQ[table,x],
 	stack = Append[stack,x];
 	table = DeleteCases[table,x];
@@ -52,45 +54,80 @@ not[x_] := If[x===False, True, False]
 
 eq[x_,y_] := If[x===y, True]
 
+(* LISTS OF COMMANDS *)
 commands := {xcs, xtb, xnn, xms[arg], xmt[arg], xdu[arg,arg], xnot[arg], xeq[arg,arg]}
+crossoverCommands := {xcs, xtb, xnn, xms, xmt, xdu, xnot, xeq}
 
-randomprograms := Module[{counter=1,prog=commands[[8]]},
+(* RANDOM GENERATORS *)
+rand18 := Random[Integer,{1,8}];
+rand13 := Random[Integer,{1,3}];
+randlist[list_] := Random[Integer,{1,Length[list]}];
+
+(* GENERATING RANDOM POPULATION *)
+randomPrograms := Module[{counter=1,prog=commands[[8]]},
 	While[FreeQ[prog,arg]===False,
 		If[counter<5,
-			prog = prog /. xms[arg] :> xms[commands[[Random[Integer,{1,3}] ]] ];
-			prog = prog /. xmt[arg] :> xmt[commands[[Random[Integer,{1,3}] ]] ];
-			prog = prog /. arg :> commands[[Random[Integer,{1,8}] ]],
-			prog = prog /. arg :> commands[[Random[Integer,{1,3}] ]]
+			prog = prog /. xms[arg] :> xms[commands[[rand13 ]] ];
+			prog = prog /. xmt[arg] :> xmt[commands[[rand13 ]] ];
+			prog = prog /. arg :> commands[[rand18 ]],
+			prog = prog /. arg :> commands[[rand13 ]]
 			];
 		counter+=1
 		];
 	prog
 	]
 
-population := Table[randomprograms,{10}];
+population := Table[randomPrograms,{10}];
 
+(* EVALUATION OF PROGRAMS AND FITNESS *)
 fitness[prog_] := Module[{evaluate=prog},
 	evaluate = evaluate /. {xcs :> cs, xtb :> tb, xnn :> nn, xms :> ms, xmt :> mt, xdu :> du,
 	xnot :> not, xeq :> eq};
 	evaluate
 	]
 
-crossover[parents_] := Module[{temp},
-	pos1=Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ];
-	pos2=Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ];
-
-	While[pos1 == {},
-		pos1 = Position[parents[[1]],commands[[Random[Integer,{4,8}]]][[0]] ]
+(* EVOLVING POPULATION *)
+crossover[parents_] := Module[{poscomm,prev1,prev2},
+	(* Selecting branch from parent 1 *)
+	While[poscomm = rand18;
+		pos1 = Position[parents[[1]],crossoverCommands[[poscomm]] ];
+		pos1=={}
 		];
-	pos1 = Drop[pos1[[Random[Integer,{1,Length[pos1]}] ]],-1];
+	pos1 = pos1[[randlist[pos1] ]];
 
-	While[pos2 == {},
-		pos2 = Position[parents[[2]],commands[[Random[Integer,{4,8}]]][[0]] ]
+	If[pos1[[-1]]==0,
+		pos1 = Drop[pos1,-1]],
+		prev1 = Head[parents[[1,Sequence @@ Drop[pos1,-1] ]] ]
 		];
-	pos2 = Drop[pos2[[Random[Integer,{1,Length[pos2]}] ]],-1];
 
-	prog1 = ReplacePart[parents[[1]],parents[[2]][[Sequence @@ pos2]],pos1];
-	prog2 = ReplacePart[parents[[2]],parents[[1]][[Sequence @@ pos1]],pos2];
+	(* Selecting branch from parent 2 conform to branch 1 *)
+	If[poscomm<4 && MatchQ[prev,xms | xmt],
+
+		While[pos2=Position[parents[[2]],crossoverCommands[[rand13]] ];
+			pos2=={}
+			];
+		pos2 = pos2[[randlist[pos2] ]],
+
+		While[pos2=Position[parents[[2]],crossoverCommands[[rand18]] ];
+			pos2=={}
+			];
+		pos2 = pos2[[randlist[pos2] ]];
+		(* If[pos2[[-1]]==0,
+			pos2 = Drop[pos2,-1],
+			prev2 = Head[parents[[2,Sequence @@ Drop[pos2,-1] ]] ]
+			]; *)
+		];
+
+	(* Crossover *)
+	If[pos1=={},
+		prog1 = parents[[2]][[Sequence @@ pos2]],
+		prog1 = ReplacePart[parents[[1]],parents[[2]][[Sequence @@ pos2]],pos1]
+		];
+	If[pos2=={},
+		prog2 = parents[[1]][[Sequence @@ pos1]],
+		prog2 = ReplacePart[parents[[2]],parents[[1]][[Sequence @@ pos1]],pos2]
+		];
+
 	newprogs = {prog1, prog2};
 	newprogs
 	]
