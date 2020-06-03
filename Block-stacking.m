@@ -87,35 +87,34 @@ fitness[prog_] := Module[{evaluate=prog},
 	]
 
 (* EVOLVING POPULATION *)
-crossover[parents_] := Module[{poscomm,prev1,prev2},
-	(* Selecting branch from parent 1 *)
-	While[poscomm = rand18;
-		pos1 = Position[parents[[1]],crossoverCommands[[poscomm]] ];
-		pos1=={}
-		];
-	pos1 = pos1[[randlist[pos1] ]];
-
-	If[pos1[[-1]]==0,
-		pos1 = Drop[pos1,-1]],
-		prev1 = Head[parents[[1,Sequence @@ Drop[pos1,-1] ]] ]
-		];
-
-	(* Selecting branch from parent 2 conform to branch 1 *)
-	If[poscomm<4 && MatchQ[prev,xms | xmt],
-
-		While[pos2=Position[parents[[2]],crossoverCommands[[rand13]] ];
-			pos2=={}
+crossover[parents_] := Module[{poscomm1,poscomm2,prev1,prev2},
+	While[
+		(* Selecting branch from parent 1 *)
+		While[poscomm1 = rand18;
+			pos1 = Position[parents[[1]],crossoverCommands[[poscomm1]] ];
+			pos1=={}
 			];
-		pos2 = pos2[[randlist[pos2] ]],
+		pos1 = pos1[[randlist[pos1] ]];
 
-		While[pos2=Position[parents[[2]],crossoverCommands[[rand18]] ];
+		If[pos1[[-1]]==0,
+			pos1 = Drop[pos1,-1],
+			prev1 = Head[parents[[1,Sequence @@ Drop[pos1,-1] ]] ]
+			];
+
+		(* Selecting branch from parent 2 *)
+		While[poscomm2 = rand18;
+			pos2 = Position[parents[[2]],crossoverCommands[[poscomm2]] ];
 			pos2=={}
 			];
 		pos2 = pos2[[randlist[pos2] ]];
-		(* If[pos2[[-1]]==0,
+
+		If[pos2[[-1]]==0,
 			pos2 = Drop[pos2,-1],
 			prev2 = Head[parents[[2,Sequence @@ Drop[pos2,-1] ]] ]
-			]; *)
+			];
+
+		(* Condition of compatibility *)
+		(poscomm1<4 && MatchQ[prev1,xms | xmt] && poscomm2>3) || (poscomm2<4 && MatchQ[prev2,xms | xmt] && poscomm1>3)
 		];
 
 	(* Crossover *)
